@@ -8,11 +8,18 @@ import { ctrlNuevaPortada, ctrlDestroyPortada } from './portada.js';
 export const ctrlAddLibro = async (req, res) => {
     try {
         const { titulo, genero, fechaPublicacion, autor } = req.body
+
+        if (!req.files || !req.files.imagenPortada) {
+            return res.status(400).json({ error: 'Imagen requerida' });
+        }   
         const imagenPortada = req.files.imagenPortada
-        if(!imagenPortada){
-            return res.status(400).json({error: 'Imagen requerida'})
-        };
-         const imgSave=await ctrlNuevaPortada(imagenPortada);
+
+        if (typeof imagenPortada !== 'object') {
+            return res.status(400).json({ error: 'La imagen de portada no es válida' });
+        }
+        
+        const imgSave = await ctrlNuevaPortada(imagenPortada);
+
         const nuevoLibro= await LibroModel.create({
             titulo,
             genero,
@@ -20,7 +27,9 @@ export const ctrlAddLibro = async (req, res) => {
             autor,
             imagenPortada: imgSave
         });
+
         if(!nuevoLibro){
+            await ctrlDestroyPortada(imgSave);
             return res.status(400).json({error: 'Libro no agregado'})
         }
         return res.status(200).json({message: 'Libro agregado', nuevoLibro})
@@ -40,6 +49,7 @@ export const ctrlGetLibros = async (req, res) => {
         return res.status(200).json({message: 'Libros', libros})
     } catch (error) {
         console.error(error)
+        return res.status(500).json({error: 'Error interno del servidor'})
     }
 }
 
@@ -53,6 +63,7 @@ export const ctrlGetLibro = async (req, res) => {
         return res.status(200).json({message: 'Libro', libro})
     } catch (error) {
         console.error(error)
+        return res.status(500).json({error: 'Error interno del servidor'})
     }
 }
 
@@ -60,9 +71,11 @@ export const ctrlUpdateLibro = async (req, res) => {
     const { id } = req.params
     const { titulo, genero, fechaPublicacion, autor } = req.body
     let { imagenPortada } = req.files
+
     try {
-        const imgSave=await ctrlNuevaPortada(imagenPortada);
-       const libro =await LibroModel.findByIdAndUpdate(id,{titulo,genero,fechaPublicacion,autor,imagenPortada:imgSave})
+        const imgSave = await ctrlNuevaPortada(imagenPortada);
+        const libro =await LibroModel.findByIdAndUpdate(id,{titulo,genero,fechaPublicacion,autor,imagenPortada:imgSave})
+
         if (!libro) {
             return res.status(404).json('Libro no encontrado')
         }
@@ -86,5 +99,6 @@ export const ctrlDeleteLibro = async (req, res) => {
         return res.status(200).json({message: 'Libro eliminado', libro})
     } catch (error) {
         console.error(error)
+        return res.status(500).json({error: 'Error interno del servidor'})
     }
 }

@@ -5,7 +5,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const ctrlNuevaPortada = async (imagenPortada) => {
     try {
-        const uploadPath =path.join(__dirname, '../../src/uploads', imagenPortada);
+        const uploadPath = path.join(__dirname, '../../src/uploads', imagenPortada);
+    
+
         const imagenPortadaPath = await imagenPortada.mv(uploadPath);
         if (!imagenPortadaPath) {
             return false
